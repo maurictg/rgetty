@@ -30,11 +30,6 @@ fn read_input(tty: &mut File) -> String {
         if c == '\n' {
             break;
         } else {
-            //this does not work, unfortunately
-            /*if let Some(m) = mask {
-                write!(tty, "\x1b[1D{}", m).unwrap();
-            };*/
-
             chars.push(c);
         }
     }
@@ -61,6 +56,14 @@ fn main() {
 
     let dont_clear_screen = env::var("NOCLEAR").is_ok();
     let use_system_login = env::var("SYSTEMLOGIN").is_ok();
+    let use_clear_delay = env::var("CLEARDELAY")
+        .map(|x| x.parse::<i32>().expect("CLEARDELAY must be a number in ms"));
+
+    let ascii_art_file = env::var("ART");
+
+    let error_delay = env::var("ERRORDELAY").map(|x|x.parse::<i32>()
+        .expect("ERRORDELAY must me a number"))
+        .unwrap_or(1500);
 
     if nr_tty < 1 || nr_tty > 12 {
         panic!("TTY number is too large");
@@ -73,10 +76,20 @@ fn main() {
         .expect("Failed to open TTY");
 
     if !dont_clear_screen {
+        if let Ok(cd) = use_clear_delay {
+            thread::sleep(Duration::from_millis(cd as u64));
+        }
+ 
         write!(&mut tty, "{esc}[2J{esc}[1;1H", esc = 27 as char).expect("Could not clear TTY");
     }
 
-    writeln!(tty, "\x1b[1;32m{}\x1b[0m", ART).unwrap();
+    let art = if let Ok(Ok(f)) = ascii_art_file.map(|r|fs::read_to_string(r)) {
+        f
+    } else { 
+        ART.to_owned() 
+    };
+
+    writeln!(tty, "\x1b[1;32m{}\x1b[0m", art).unwrap();
 
     let time = Utc::now().format("%H:%M:%S");
     writeln!(
@@ -94,11 +107,11 @@ fn main() {
     if use_system_login {
         login(tty, &username, true);
     } else {
-        ask_and_validate_pass(&username, tty);
+        ask_and_validate_pass(&username, tty, error_delay);
     }
 }
 
-fn ask_and_validate_pass(username: &str, tty: File) {
+fn ask_and_validate_pass(username: &str, tty: File, err_delay: i32) {
     let mut tty = tty;
     write!(tty, "Password: ").unwrap();
     tty.flush().unwrap();
@@ -144,7 +157,7 @@ fn ask_and_validate_pass(username: &str, tty: File) {
         write!(tty, "\x1b[0m").unwrap(); //reset color
         tty.flush().unwrap();
         
-        thread::sleep(Duration::from_millis(2000));
+        thread::sleep(Duration::from_millis(err_delay as u64));
         std::process::exit(1);
     }
 }

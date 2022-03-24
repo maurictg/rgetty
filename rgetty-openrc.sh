@@ -1,5 +1,9 @@
 #!/usr/bin/openrc-run
 export TTY="6"
+export ERRORDELAY="1000"
+export CLEARDELAY="2000"
+export ART="/home/yourusername/custom_ascii_art.txt"
+
 description="Start rust-getty"
 supervisor=supervise-daemon
 port="${RC_SVCNAME#*.}"
