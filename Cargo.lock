@@ -71,6 +71,7 @@ name = "rgetty"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "libc",
  "pam",
 ]
 

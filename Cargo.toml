@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 pam = "0.7.0"
 chrono = "0.4.19"
+libc = "0.2.121"
