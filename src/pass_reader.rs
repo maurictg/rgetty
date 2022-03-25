@@ -22,7 +22,7 @@ pub fn read_password(tty: &mut File) -> String {
     //hide the password
     term.c_lflag &= !ECHO;
 
-    //don't hide newline character from 'enter
+    //don't hide newline character from 'enter'
     term.c_lflag |= ECHONL;
 
     //save setting
@@ -34,7 +34,7 @@ pub fn read_password(tty: &mut File) -> String {
         .read_line(&mut pass)
         .expect("Failed to read password");
 
-        //set terminal back to normal mode (text)
+        //set terminal back to normal mode
         unsafe {
             tcsetattr(fd, TCSANOW, &term_orig);
         }
