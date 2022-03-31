@@ -26,6 +26,7 @@ fn main() {
     let use_error_art = env::var("ERRORART").is_ok();
     let use_clear_delay = env::var("CLEARDELAY")
         .map(|x| x.parse::<i32>().expect("CLEARDELAY must be a number in ms"));
+    let default_user_name = env::var("USERNAME");
 
     let ascii_art_file = env::var("ART");
 
@@ -67,10 +68,19 @@ fn main() {
     )
     .unwrap();
 
-    write!(tty, "Username: ").unwrap();
+    let default_user_name = default_user_name.as_ref();
+    if default_user_name.is_ok() {
+        write!(tty, "Username [{}]: ", default_user_name.unwrap()).unwrap();
+    } else {
+        write!(tty, "Username: ").unwrap();
+    }
+
     tty.flush().unwrap();
 
-    let username = read_input(&mut tty);
+    let mut username = read_input(&mut tty);
+    if username.len() == 0 {
+        username = default_user_name.unwrap().to_owned();
+    }
 
     if use_system_login {
         login(tty, &username, true);
